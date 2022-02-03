@@ -9,6 +9,7 @@ pipeline {
     stage('Terraform Init & Plan'){
         when { anyOf {branch "master";branch "dev";changeRequest()} }
         steps {
+            copyArtifacts filter: 'infra/dev/terraform.tfstate', projectName: '${JOB_NAME}'
             sh '''
             if [ "$BRANCH_NAME" = "master" ] || [ "$CHANGE_TARGET" = "master" ]; then
                 cd infra/prod
@@ -16,7 +17,8 @@ pipeline {
                 cd infra/dev
             fi
 
-            # YOUR COMMANDS HERE
+            terraform init
+            terraform plan
             '''
         }
     }
@@ -28,15 +30,17 @@ pipeline {
         }
         steps {
             sh '''
+            copyArtifacts filter: 'infra/dev/terraform.tfstate', projectName:- '${JOB_NAME}'
             if [ "$BRANCH_NAME" = "master" ] || [ "$CHANGE_TARGET" = "master" ]; then
                 INFRA_ENV=infra/prod
             else
                 INFRA_ENV=infra/dev
             fi
 
-
-            # YOUR COMMANDS HERE
+            cd$INFRA_ENV
+            terraform apply -auto-approve
             '''
+            archiveArtifacts artifacts: 'infra/dev/terraform.tfstate', onlyIfSuccessful: true
         }
     }
   }
