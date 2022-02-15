@@ -19,7 +19,7 @@ resource "aws_instance" "Terraform-Mnist-ec2" {
   instance_type = "t2.micro"
 
   tags = {
-    Name = "MnistDevBranchInstance"
+    Name = "MnistProdBranchInstance"
     Terraform = "True"
   }
 }
